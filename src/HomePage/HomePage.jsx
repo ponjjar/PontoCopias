@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import { onValue, ref, getDatabase, push } from "firebase/database";
 
@@ -159,6 +159,25 @@ export default function Painel() {
         />
       </div>
 
+      <button
+        onClick={() => setModalAberto(true)}
+        style={{
+          backgroundColor: "#28a745",
+          color: "#fff",
+          padding: 12,
+          borderRadius: 8,
+          marginBottom: 20,
+          width: "100%",
+          fontSize: 18,
+          fontWeight: "bold",
+          border: "none",
+          cursor: "pointer",
+          transition: "background-color 0.3s",
+        }}
+      >
+        Cadastrar Novo
+      </button>
+
       <div style={{ height: 1, backgroundColor: "#ccc", marginBottom: 12 }} />
 
       <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
@@ -235,6 +254,143 @@ export default function Painel() {
           </p>
         )}
       </div>
+
+      {modalAberto && (
+        <div
+          style={{
+            backgroundColor: "#fff",
+            padding: 24,
+            position: "fixed",
+            top: "10%",
+            left: "5%",
+            right: "5%",
+            maxWidth: "600px",
+            margin: "0 auto",
+            borderRadius: 12,
+            boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+            zIndex: 999,
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 24,
+              marginBottom: 16,
+              fontWeight: "bold",
+              textAlign: "center",
+            }}
+          >
+            Cadastrar Novo Dado
+          </h2>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+              width: "100%",
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Nome"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Informação"
+              value={novaInfo}
+              onChange={(e) => setNovaInfo(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Nome da Empresa"
+              value={novaEmpresa}
+              onChange={(e) => setNovaEmpresa(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Responsável"
+              value={novoResponsavel}
+              onChange={(e) => setNovoResponsavel(e.target.value)}
+              style={inputStyle}
+            />
+            <select
+              value={novoDocumentoTipo}
+              onChange={(e) => setNovoDocumentoTipo(e.target.value)}
+              style={inputStyle}
+            >
+              <option value="">Selecione o tipo de documento</option>
+              <option value="CNPJ">CNPJ</option>
+              <option value="CPF">CPF</option>
+              <option value="RG">RG</option>
+            </select>
+            <input
+              type="text"
+              placeholder="Número do Documento"
+              value={novoDocumentoNumero}
+              onChange={(e) => setNovoDocumentoNumero(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Endereço"
+              value={novoEndereco}
+              onChange={(e) => setNovoEndereco(e.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="text"
+              placeholder="Fone/Fax"
+              value={novoFone}
+              onChange={(e) => setNovoFone(e.target.value)}
+              style={inputStyle}
+            />
+            <textarea
+              placeholder="Observações"
+              value={novaObs}
+              onChange={(e) => setNovaObs(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+            <button
+              onClick={salvarNoFirebase}
+              style={{
+                backgroundColor: "#007AFF",
+                color: "#fff",
+                padding: 12,
+                borderRadius: 8,
+                flex: 1,
+                fontWeight: "bold",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Salvar
+            </button>
+            <button
+              onClick={() => setModalAberto(false)}
+              style={{
+                backgroundColor: "#6c757d",
+                color: "#fff",
+                padding: 12,
+                borderRadius: 8,
+                flex: 1,
+                fontWeight: "bold",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
