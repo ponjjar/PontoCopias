@@ -1,7 +1,5 @@
 # Ponto das Cópias
 
-## Video demonstrativo do projeto:
-
 ## Tecnologias Utilizadas
 
 - React JS
