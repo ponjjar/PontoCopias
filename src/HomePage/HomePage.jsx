@@ -125,7 +125,7 @@ export default function Painel() {
           textAlign: "center",
         }}
       >
-        Sistema de Registro de Dadosp
+        Ponto das Cópias
       </h1>
 
       <input

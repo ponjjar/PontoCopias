@@ -101,7 +101,7 @@ function Login() {
   return (
     <>
       <div></div>
-      <h1>Sistema de Gerenciamento de Dados</h1>
+      <h1>Ponto das Cópias</h1>
       <h3>{registering ? "Se cadastre" : "Faça o login"}</h3>
       {
         //make a login form with register screen with column screen
