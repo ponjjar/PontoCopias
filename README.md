@@ -15,5 +15,7 @@
   Vercel
 
 A aplicação foi hospedada na Vercel, uma plataforma gratuita para projetos em Node.js e React, com suporte a deploy automático via integração com Git. Ela facilita a publicação contínua e estável da aplicação web.
+ 
 
-[Clique aqui para baixar o vídeo demonstrativo](https://github.com/ponjjar/SGD/blob/main/Video%20Demonstrativo.mp4)
+[Visualizar as próximas correções / melhorias](https://github.com/ponjjar/PontoCopias/issues)
+[Visualizar o histórico de alterações no projeto](https://github.com/ponjjar/PontoCopias/commits/main/)
