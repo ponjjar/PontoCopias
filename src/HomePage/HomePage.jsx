@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAuth } from "firebase/auth";
 import { onValue, ref, getDatabase, push } from "firebase/database";
+import FontSlider from "../utils/fontSlider";
 
 export default function Painel() {
   const db = getDatabase();
@@ -116,6 +117,7 @@ export default function Painel() {
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       }}
     >
+      <FontSlider />
       <h1
         style={{
           fontSize: 36,
@@ -127,7 +129,6 @@ export default function Painel() {
       >
         Ponto das Cópias
       </h1>
-
       <input
         type="text"
         placeholder="Pesquisar por nome ou informação..."
@@ -158,7 +159,6 @@ export default function Painel() {
           style={inputStyle}
         />
       </div>
-
       <button
         onClick={() => setModalAberto(true)}
         style={{
@@ -177,9 +177,7 @@ export default function Painel() {
       >
         Cadastrar Novo
       </button>
-
       <div style={{ height: 1, backgroundColor: "#ccc", marginBottom: 12 }} />
-
       <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
         {dadosFiltrados.map((item) => (
           <div
@@ -244,7 +242,7 @@ export default function Painel() {
                 fontSize: 14,
               }}
             >
-              {expandidoId === item.id ? "Fechar" : "..."}
+              {expandidoId === item.id ? "Fechar" : "Mostrar dados"}
             </button>
           </div>
         ))}
@@ -254,7 +252,6 @@ export default function Painel() {
           </p>
         )}
       </div>
-
       {modalAberto && (
         <div
           style={{

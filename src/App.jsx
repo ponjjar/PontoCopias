@@ -8,14 +8,19 @@ import Painel from "./HomePage/HomePage";
 function App() {
   //configura rotas para a aplicação
   return (
-    <Routes>
-      <Route element={<LoginGuard />}>
-        {/* LoginGuard é o componente que verifica se o usuário está logado */}
-        <Route path="/*" element={<Painel />} />{" "}
-        {/* HomePage é o componente que exibe a página inicial */}
-        {/* <Route path="/jogos/memoria" element={<MemoryGame />} /> */}
-      </Route>
-    </Routes>
+    <>
+      <div className="app">
+        {/* <VLibras forceOnload /> */}
+        <Routes>
+          <Route element={<LoginGuard />}>
+            {/* LoginGuard é o componente que verifica se o usuário está logado */}
+            <Route path="/*" element={<Painel />} />{" "}
+            {/* HomePage é o componente que exibe a página inicial */}
+            {/* <Route path="/jogos/memoria" element={<MemoryGame />} /> */}
+          </Route>
+        </Routes>
+      </div>
+    </>
   );
 }
 
