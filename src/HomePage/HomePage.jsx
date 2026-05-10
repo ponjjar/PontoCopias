@@ -9,10 +9,12 @@ export default function Painel() {
 
   const [dados, setDados] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   const [filtro, setFiltro] = useState("");
   const [filtroEmpresa, setFiltroEmpresa] = useState("");
   const [filtroResponsavel, setFiltroResponsavel] = useState("");
+  const [filtroUsuario, setFiltroUsuario] = useState("");
   
   const [modalAberto, setModalAberto] = useState(false);
   const [novoNome, setNovoNome] = useState("");
@@ -25,8 +27,14 @@ export default function Painel() {
   const [novoFone, setNovoFone] = useState("");
   const [novaObs, setNovaObs] = useState("");
 
+  const [modalUsuarioAberto, setModalUsuarioAberto] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [editUserName, setEditUserName] = useState("");
+  const [editUserEmpresa, setEditUserEmpresa] = useState("");
+  const [editUserRole, setEditUserRole] = useState("");
+
   const [carregando, setCarregando] = useState(true);
-  const [expandidoId, setExpandidoId] = useState(null);
+  const [detalhesItem, setDetalhesItem] = useState(null);
   const [tuyaStatus, setTuyaStatus] = useState(null);
   const [abaAtiva, setAbaAtiva] = useState("status");
 
@@ -35,9 +43,7 @@ export default function Painel() {
   const [agendDate, setAgendDate] = useState("");
   const [agendTime, setAgendTime] = useState("");
 
-  const toggleExpandido = (id) => {
-    setExpandidoId(expandidoId === id ? null : id);
-  };
+
 
   const inputStyle = {
     padding: "14px 18px",
@@ -62,7 +68,7 @@ export default function Painel() {
           setUserData({ uid: user.uid, ...ud });
           // Auto select best tab
           if (!abaAtiva || abaAtiva === 'gerenciamento' || abaAtiva === 'status') {
-             if (ud.role === 'admin') setAbaAtiva('gerenciamento');
+             if (ud.role === 'admin' || ud.role === 'gerente') setAbaAtiva('gerenciamento');
              else setAbaAtiva('agendamentos');
           }
         }
@@ -120,10 +126,31 @@ export default function Painel() {
       });
   }, []);
 
+  useEffect(() => {
+    if (userData?.role === 'admin' || userData?.role === 'gerente') {
+      const usersRef = ref(db, "/users");
+      const unsubscribe = onValue(usersRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const raw = snapshot.val();
+          const formatado = Object.entries(raw).map(([key, value]) => ({
+            uid: key,
+            ...value,
+          }));
+          setAllUsers(formatado);
+        } else {
+          setAllUsers([]);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [userData?.role, db]);
+
   const isAdmin = userData?.role === 'admin';
+  const isGerente = userData?.role === 'gerente';
+  const hasManagementAccess = isAdmin || isGerente;
 
   let dadosVisiveis = [];
-  if (isAdmin) {
+  if (hasManagementAccess) {
     dadosVisiveis = dados.filter(
       (item) =>
         (item.nome?.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -134,6 +161,12 @@ export default function Painel() {
   } else if (userData?.empresa) {
     dadosVisiveis = dados.filter(item => item.empresa?.toLowerCase() === userData.empresa.toLowerCase());
   }
+
+  const usuariosFiltrados = allUsers.filter((u) => 
+    u.name?.toLowerCase().includes(filtroUsuario.toLowerCase()) ||
+    u.email?.toLowerCase().includes(filtroUsuario.toLowerCase()) ||
+    u.empresa?.toLowerCase().includes(filtroUsuario.toLowerCase())
+  );
 
   const salvarNoFirebase = async () => {
     if (novoNome.trim() === "") return;
@@ -220,6 +253,32 @@ export default function Painel() {
     }
   };
 
+  const abrirEdicaoUsuario = (user) => {
+    setUsuarioEditando(user);
+    setEditUserName(user.name || "");
+    setEditUserEmpresa(user.empresa || "");
+    setEditUserRole(user.role || "comum");
+    setModalUsuarioAberto(true);
+  };
+
+  const salvarEdicaoUsuario = async () => {
+    if (!usuarioEditando) return;
+    const userRef = ref(db, `/users/${usuarioEditando.uid}`);
+    
+    // Gerentes não podem mudar a role. Somente admin.
+    let updateData = {
+      name: editUserName,
+      empresa: editUserEmpresa,
+    };
+    if (isAdmin) {
+       updateData.role = editUserRole;
+    }
+
+    await update(userRef, updateData);
+    setModalUsuarioAberto(false);
+    setUsuarioEditando(null);
+  };
+
 
   if (carregando) {
     return (
@@ -254,17 +313,29 @@ export default function Painel() {
           <h1 style={{ fontSize: 24, fontWeight: '700', margin: 0, letterSpacing: '0.5px' }}>Ponto das Cópias</h1>
         </div>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          {isAdmin && (
-            <button 
-              onClick={() => setAbaAtiva("gerenciamento")}
-              style={{
-                background: abaAtiva === "gerenciamento" ? "rgba(255,255,255,0.2)" : "transparent",
-                border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px",
-                cursor: "pointer", fontWeight: "600", transition: "all 0.3s"
-              }}
-            >
-              Gerenciamento
-            </button>
+          {hasManagementAccess && (
+            <>
+              <button 
+                onClick={() => setAbaAtiva("gerenciamento")}
+                style={{
+                  background: abaAtiva === "gerenciamento" ? "rgba(255,255,255,0.2)" : "transparent",
+                  border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px",
+                  cursor: "pointer", fontWeight: "600", transition: "all 0.3s"
+                }}
+              >
+                Gerenciamento
+              </button>
+              <button 
+                onClick={() => setAbaAtiva("usuarios")}
+                style={{
+                  background: abaAtiva === "usuarios" ? "rgba(255,255,255,0.2)" : "transparent",
+                  border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px",
+                  cursor: "pointer", fontWeight: "600", transition: "all 0.3s"
+                }}
+              >
+                Usuários
+              </button>
+            </>
           )}
           <button 
             onClick={() => setAbaAtiva("agendamentos")}
@@ -274,9 +345,9 @@ export default function Painel() {
               cursor: "pointer", fontWeight: "600", transition: "all 0.3s"
             }}
           >
-            {isAdmin ? "Agendamentos (Todos)" : "Meus Agendamentos"}
+            {hasManagementAccess ? "Agendamentos (Todos)" : "Meus Agendamentos"}
           </button>
-          {!isAdmin && userData?.empresa && (
+          {!hasManagementAccess && userData?.empresa && (
              <button 
              onClick={() => setAbaAtiva("empresa")}
              style={{
@@ -356,9 +427,9 @@ export default function Painel() {
           <div style={{ marginTop: "24px" }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: "28px", color: "#2c3e50", margin: 0 }}>
-                {isAdmin ? "Gerenciar Dados" : `Dados da Empresa: ${userData?.empresa}`}
+                {hasManagementAccess ? "Gerenciar Dados" : `Dados da Empresa: ${userData?.empresa}`}
               </h2>
-              {isAdmin && (
+              {hasManagementAccess && (
                 <button
                   onClick={() => { limparFormularioData(); setModalAberto(true); }}
                   style={{
@@ -373,7 +444,7 @@ export default function Painel() {
               )}
             </div>
 
-            {isAdmin && (
+            {hasManagementAccess && (
               <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', marginBottom: '32px' }}>
                 <input
                   type="text" placeholder="Pesquisar por nome ou informação..."
@@ -405,29 +476,22 @@ export default function Painel() {
                 >
                   <div>
                     <p style={{ fontWeight: "700", fontSize: "20px", color: "#2c3e50", marginBottom: "8px", margin: 0 }}>{item.nome}</p>
-                    <p style={{ fontSize: "15px", color: "#7f8c8d", marginTop: 0, marginBottom: "16px", lineHeight: "1.5" }}>{item.info}</p>
-                    {expandidoId === item.id && (
-                      <div style={{ marginTop: "16px", color: "#34495e", fontSize: "14px", padding: "16px", background: "#f8f9fa", borderRadius: "8px" }}>
-                        {item.empresa && <p style={{margin: "4px 0"}}><strong>Empresa:</strong> {item.empresa}</p>}
-                        {item.responsavel && <p style={{margin: "4px 0"}}><strong>Responsável:</strong> {item.responsavel}</p>}
-                        <p style={{margin: "4px 0"}}><strong>Documento:</strong> {item.tipoDocumento || "Não registrado"} {item.numeroDocumento || ""}</p>
-                        {item.endereco && <p style={{margin: "4px 0"}}><strong>Endereço:</strong> {item.endereco}</p>}
-                        {item.fone && <p style={{margin: "4px 0"}}><strong>Fone:</strong> {item.fone}</p>}
-                        {item.observacoes && <p style={{margin: "4px 0"}}><strong>Observações:</strong> {item.observacoes}</p>}
-                      </div>
-                    )}
+                    <p style={{ fontSize: "15px", color: "#7f8c8d", marginTop: 0, marginBottom: "16px", lineHeight: "1.5", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.info}</p>
                   </div>
                   <button
-                    onClick={() => toggleExpandido(item.id)}
+                    onClick={() => setDetalhesItem(item)}
                     style={{
-                      marginTop: "20px", background: expandidoId === item.id ? "#ecf0f1" : "#f0f7ff",
-                      color: expandidoId === item.id ? "#7f8c8d" : "#007AFF",
-                      border: expandidoId === item.id ? "1px solid #bdc3c7" : "1px solid #cce5ff",
+                      marginTop: "20px", background: "#f0f7ff",
+                      color: "#007AFF",
+                      border: "1px solid #cce5ff",
                       borderRadius: "8px", padding: "10px", cursor: "pointer",
-                      fontSize: "14px", fontWeight: "600", width: "100%"
+                      fontSize: "14px", fontWeight: "600", width: "100%",
+                      transition: "all 0.2s"
                     }}
+                    onMouseOver={(e) => { e.currentTarget.style.background = "#007AFF"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = "#f0f7ff"; e.currentTarget.style.color = "#007AFF"; }}
                   >
-                    {expandidoId === item.id ? "Ocultar Detalhes" : "Ver Detalhes Completos"}
+                    Ver Detalhes Completos
                   </button>
                 </div>
               ))}
@@ -442,13 +506,58 @@ export default function Painel() {
           </div>
         )}
 
+        {abaAtiva === "usuarios" && hasManagementAccess && (
+          <div style={{ marginTop: "24px" }}>
+            <h2 style={{ fontSize: "28px", color: "#2c3e50", marginBottom: '24px' }}>Gerenciar Usuários</h2>
+            
+            <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', marginBottom: '32px' }}>
+              <input
+                type="text" placeholder="Pesquisar por nome, email ou empresa..."
+                value={filtroUsuario} onChange={(e) => setFiltroUsuario(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+              {usuariosFiltrados.map(user => (
+                <div key={user.uid} style={{
+                  backgroundColor: "#fff", padding: "24px", borderRadius: "16px",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)", 
+                  borderLeft: user.role === 'admin' ? "6px solid #e74c3c" : user.role === 'gerente' ? "6px solid #f39c12" : "6px solid #3498db"
+                }}>
+                  <p style={{ fontWeight: "700", fontSize: "18px", margin: "0 0 8px 0" }}>{user.name}</p>
+                  <p style={{ color: "#555", margin: "0 0 4px 0", fontSize: "14px" }}>{user.email}</p>
+                  <p style={{ color: "#555", margin: "0 0 4px 0", fontSize: "14px" }}>Empresa: <strong>{user.empresa || 'Nenhuma'}</strong></p>
+                  <p style={{ color: "#555", margin: "0 0 16px 0", fontSize: "14px" }}>
+                    Cargo: <strong style={{ 
+                      color: user.role === 'admin' ? '#e74c3c' : user.role === 'gerente' ? '#f39c12' : '#3498db'
+                    }}>{user.role?.toUpperCase() || 'COMUM'}</strong>
+                  </p>
+                  <button
+                    onClick={() => abrirEdicaoUsuario(user)}
+                    style={{
+                      background: "#f0f7ff", color: "#007AFF", border: "1px solid #cce5ff",
+                      borderRadius: "6px", padding: "8px 12px", cursor: "pointer", width: "100%", fontWeight: "bold"
+                    }}
+                  >
+                    Editar Dados
+                  </button>
+                </div>
+              ))}
+              {usuariosFiltrados.length === 0 && (
+                <p style={{ color: "#777" }}>Nenhum usuário encontrado.</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {abaAtiva === "agendamentos" && (
            <div style={{ marginTop: "24px" }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h2 style={{ fontSize: "28px", color: "#2c3e50", margin: 0 }}>
-                {isAdmin ? "Todos os Agendamentos" : "Meu Histórico de Agendamentos"}
+                {hasManagementAccess ? "Todos os Agendamentos" : "Meu Histórico de Agendamentos"}
               </h2>
-              {!isAdmin && (
+              {!hasManagementAccess && (
                 <button
                   onClick={() => { limparFormularioData(); setModalAgendamentoAberto(true); }}
                   style={{
@@ -463,7 +572,7 @@ export default function Painel() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
-              {(isAdmin ? agendamentos : myAgendamentos).map((item) => {
+              {(hasManagementAccess ? agendamentos : myAgendamentos).map((item) => {
                  // Check if 1 hour before
                  const is1HourBefore = (new Date(`${item.date}T${item.time}`) - new Date()) <= 3600000;
                  return (
@@ -486,7 +595,7 @@ export default function Painel() {
                     <p style={{ margin: "4px 0" }}>Info: {item.dados?.info}</p>
                   </div>
 
-                  {isAdmin && (
+                  {hasManagementAccess && (
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => abrirModalParaGerenciamento(item)}
@@ -510,14 +619,14 @@ export default function Painel() {
                       )}
                     </div>
                   )}
-                  {!isAdmin && item.status === 'pendente' && is1HourBefore && (
+                  {!hasManagementAccess && item.status === 'pendente' && is1HourBefore && (
                      <div style={{ color: '#dc3545', fontWeight: 'bold', fontSize: '12px' }}>
                         *Aguardando confirmação do Ponto das Cópias.
                      </div>
                   )}
                 </div>
               )})}
-              {(isAdmin ? agendamentos : myAgendamentos).length === 0 && (
+              {(hasManagementAccess ? agendamentos : myAgendamentos).length === 0 && (
                 <p style={{ color: "#777" }}>Nenhum agendamento encontrado.</p>
               )}
             </div>
@@ -567,6 +676,51 @@ export default function Painel() {
         </>
       )}
 
+      {/* MODAL EDICAO USUARIO */}
+      {modalUsuarioAberto && (
+        <>
+          <div 
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 998, backdropFilter: "blur(4px)" }}
+            onClick={() => setModalUsuarioAberto(false)}
+          />
+          <div
+            style={{
+              backgroundColor: "#fff", padding: "32px", position: "fixed", top: "50%", left: "50%",
+              transform: "translate(-50%, -50%)", width: "90%", maxWidth: "450px",
+              borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 999,
+            }}
+          >
+            <h2 style={{ fontSize: "24px", marginBottom: "16px", fontWeight: "700", color: "#2c3e50", textAlign: "center" }}>
+              Editar Usuário
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <input type="text" placeholder="Nome do Usuário" value={editUserName} onChange={(e) => setEditUserName(e.target.value)} style={inputStyle} />
+              <input type="text" placeholder="Empresa" value={editUserEmpresa} onChange={(e) => setEditUserEmpresa(e.target.value)} style={inputStyle} />
+              
+              {isAdmin && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontWeight: '600', color: '#555' }}>Nível de Permissão (Cargo):</label>
+                  <select value={editUserRole} onChange={(e) => setEditUserRole(e.target.value)} style={inputStyle}>
+                    <option value="comum">Comum (Apenas Cliente)</option>
+                    <option value="gerente">Gerente (Acesso a Gestão/Agendamentos)</option>
+                    <option value="admin">Administrador (Acesso Total)</option>
+                  </select>
+                </div>
+              )}
+              {!isAdmin && (
+                <p style={{ color: '#e74c3c', fontSize: '14px', marginTop: '8px', textAlign: 'center' }}>
+                  * Apenas administradores podem alterar o cargo (permissão).
+                </p>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "16px", marginTop: "32px" }}>
+              <button onClick={() => setModalUsuarioAberto(false)} style={{ backgroundColor: "#f1f3f5", color: "#495057", padding: "14px", borderRadius: "10px", flex: 1, fontWeight: "600", border: "none", cursor: "pointer", fontSize: "16px" }}>Cancelar</button>
+              <button onClick={salvarEdicaoUsuario} style={{ backgroundColor: "#007AFF", color: "#fff", padding: "14px", borderRadius: "10px", flex: 1, fontWeight: "600", border: "none", cursor: "pointer", fontSize: "16px" }}>Salvar Edição</button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* MODAL AGENDAMENTO */}
       {modalAgendamentoAberto && (
         <>
@@ -607,6 +761,77 @@ export default function Painel() {
               <button onClick={() => setModalAgendamentoAberto(false)} style={{ backgroundColor: "#f1f3f5", color: "#495057", padding: "14px", borderRadius: "10px", flex: 1, fontWeight: "600", border: "none", cursor: "pointer", fontSize: "16px" }}>Cancelar</button>
               <button onClick={salvarAgendamento} style={{ backgroundColor: "#28a745", color: "#fff", padding: "14px", borderRadius: "10px", flex: 1, fontWeight: "600", border: "none", cursor: "pointer", fontSize: "16px" }}>Agendar</button>
             </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL DETALHES COMPLETOS */}
+      {detalhesItem && (
+        <>
+          <div 
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 998, backdropFilter: "blur(5px)" }}
+            onClick={() => setDetalhesItem(null)}
+          />
+          <div
+            style={{
+              backgroundColor: "#fff", padding: "40px", position: "fixed", top: "50%", left: "50%",
+              transform: "translate(-50%, -50%)", width: "90%", maxWidth: "650px", maxHeight: "90vh",
+              overflowY: "auto", borderRadius: "20px", boxShadow: "0 24px 64px rgba(0,0,0,0.3)", zIndex: 999,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", borderBottom: "1px solid #eee", paddingBottom: "16px" }}>
+              <div>
+                <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#2c3e50", margin: "0 0 8px 0" }}>
+                  {detalhesItem.nome}
+                </h2>
+                <p style={{ fontSize: "16px", color: "#7f8c8d", margin: 0 }}>
+                  {detalhesItem.info}
+                </p>
+              </div>
+              <button 
+                onClick={() => setDetalhesItem(null)}
+                style={{ background: "#f1f3f5", border: "none", borderRadius: "50%", width: "36px", height: "36px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#555", fontWeight: "bold", fontSize: "18px" }}
+              >✕</button>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #007AFF" }}>
+                <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Empresa</p>
+                <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.empresa || "Não informada"}</p>
+              </div>
+              <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #2ecc71" }}>
+                <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Responsável</p>
+                <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.responsavel || "Não informado"}</p>
+              </div>
+              <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #9b59b6" }}>
+                <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Documento ({detalhesItem.tipoDocumento || "N/A"})</p>
+                <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.numeroDocumento || "Não registrado"}</p>
+              </div>
+              <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #e67e22" }}>
+                <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Telefone / Fax</p>
+                <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.fone || "Não informado"}</p>
+              </div>
+              <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #f1c40f", gridColumn: "1 / -1" }}>
+                <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Endereço</p>
+                <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.endereco || "Não informado"}</p>
+              </div>
+            </div>
+
+            {detalhesItem.observacoes && (
+               <div style={{ marginTop: "24px", background: "#fbfbfc", padding: "20px", borderRadius: "12px", border: "1px solid #eee" }}>
+                 <p style={{ fontSize: "14px", color: "#34495e", fontWeight: "700", marginBottom: "8px", marginTop: 0 }}>Observações Adicionais:</p>
+                 <p style={{ fontSize: "15px", color: "#555", margin: 0, whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{detalhesItem.observacoes}</p>
+               </div>
+            )}
+            
+            <button
+              onClick={() => setDetalhesItem(null)}
+              style={{ width: "100%", marginTop: "32px", padding: "16px", background: "#007AFF", color: "#fff", border: "none", borderRadius: "12px", fontSize: "16px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 12px rgba(0, 122, 255, 0.3)", transition: "background 0.2s" }}
+              onMouseOver={(e) => e.target.style.background = "#0062cc"}
+              onMouseOut={(e) => e.target.style.background = "#007AFF"}
+            >
+              Fechar Detalhes
+            </button>
           </div>
         </>
       )}
