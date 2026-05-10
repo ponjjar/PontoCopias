@@ -45,12 +45,12 @@ function Login() {
   const onSubmitRegister = async (e) => {
     e.preventDefault();
     const email = e.target[1].value;
-    const password = e.target[2].value;
+    const password = e.target[3].value;
     //check if all fields are filled
     if (
       e.target[0].value === "" ||
       e.target[1].value === "" ||
-      e.target[2].value === ""
+      e.target[3].value === ""
     ) {
       alert("Preencha todos os campos");
       return;
@@ -70,6 +70,8 @@ function Login() {
           set(dbRef, {
             name: e.target[0].value,
             email: e.target[1].value,
+            empresa: e.target[2].value || "",
+            role: "comum",
           });
         } catch (error) {
           //create this user in database
@@ -78,8 +80,8 @@ function Login() {
         alert("Usuário criado com sucesso");
         //go to home page
         //call onSubmitLogin
-        e.target[0].value = e.target[1].value;
-        e.target[1].value = e.target[2].value;
+        e.target[0].value = e.target[1].value; // email
+        e.target[1].value = e.target[3].value; // password
 
         onSubmitLogin(e);
       })
@@ -163,9 +165,6 @@ function Login() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              console.log(e.target[0].value);
-              console.log(e.target[1].value);
-              console.log(e.target[2].value);
               onSubmitRegister(e);
             }}
             style={{
@@ -180,6 +179,9 @@ function Login() {
             </label>
             <label>
               <input type="text" placeholder="Digite seu email" />
+            </label>
+            <label>
+              <input type="text" placeholder="Empresa (Opcional)" />
             </label>
             <label>
               <input type="password" placeholder="Digite sua senha" />
