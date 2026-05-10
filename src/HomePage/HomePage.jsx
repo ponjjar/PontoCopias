@@ -300,7 +300,10 @@ export default function Painel() {
       }}
     >
       {/* Topbar */}
-      <div style={{
+      <div className="topbar" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
         background: 'linear-gradient(90deg, #1A2980 0%, #26D0CE 100%)',
         color: '#fff',
         padding: '16px 24px',
@@ -309,10 +312,10 @@ export default function Painel() {
         justifyContent: 'space-between',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="topbar-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: 24, fontWeight: '700', margin: 0, letterSpacing: '0.5px' }}>Ponto das Cópias</h1>
         </div>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+        <div className="topbar-buttons" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           {hasManagementAccess && (
             <>
               <button 
@@ -371,6 +374,8 @@ export default function Painel() {
             {tuyaStatus === true ? '🟢 Online' : tuyaStatus === false ? '🔴 Offline' : '⚪ Verificando'}
           </button>
           
+          <FontSlider />
+          
           {/* LOGOUT BUTTON */}
           <button 
             onClick={handleLogout}
@@ -400,8 +405,6 @@ export default function Painel() {
       </div>
 
       <div style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <FontSlider />
-        
         {abaAtiva === "status" && (
           <div style={{
             background: "#fff", padding: "48px 32px", borderRadius: "16px",
@@ -464,7 +467,7 @@ export default function Painel() {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+            <div className="data-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
               {dadosVisiveis.map((item) => (
                 <div
                   key={item.id}
@@ -518,7 +521,7 @@ export default function Painel() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+            <div className="data-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
               {usuariosFiltrados.map(user => (
                 <div key={user.uid} style={{
                   backgroundColor: "#fff", padding: "24px", borderRadius: "16px",
@@ -571,7 +574,7 @@ export default function Painel() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+            <div className="data-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
               {(hasManagementAccess ? agendamentos : myAgendamentos).map((item) => {
                  // Check if 1 hour before
                  const is1HourBefore = (new Date(`${item.date}T${item.time}`) - new Date()) <= 3600000;
@@ -638,14 +641,14 @@ export default function Painel() {
       {modalAberto && (
         <>
           <div 
-            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 998, backdropFilter: "blur(4px)" }}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1001, backdropFilter: "blur(4px)" }}
             onClick={() => setModalAberto(false)}
           />
-          <div
+          <div className="modal-container"
             style={{
               backgroundColor: "#fff", padding: "32px", position: "fixed", top: "50%", left: "50%",
               transform: "translate(-50%, -50%)", width: "90%", maxWidth: "600px", maxHeight: "90vh",
-              overflowY: "auto", borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 999,
+              overflowY: "auto", borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 1002,
             }}
           >
             <h2 style={{ fontSize: "24px", marginBottom: "24px", fontWeight: "700", color: "#2c3e50", textAlign: "center" }}>
@@ -654,11 +657,11 @@ export default function Painel() {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%" }}>
               <input type="text" placeholder="Nome" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} style={inputStyle} />
               <input type="text" placeholder="Informação" value={novaInfo} onChange={(e) => setNovaInfo(e.target.value)} style={inputStyle} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <input type="text" placeholder="Nome da Empresa" value={novaEmpresa} onChange={(e) => setNovaEmpresa(e.target.value)} style={inputStyle} />
                 <input type="text" placeholder="Responsável" value={novoResponsavel} onChange={(e) => setNovoResponsavel(e.target.value)} style={inputStyle} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <select value={novoDocumentoTipo} onChange={(e) => setNovoDocumentoTipo(e.target.value)} style={inputStyle}>
                   <option value="">Tipo de documento</option><option value="CNPJ">CNPJ</option><option value="CPF">CPF</option><option value="RG">RG</option>
                 </select>
@@ -680,14 +683,14 @@ export default function Painel() {
       {modalUsuarioAberto && (
         <>
           <div 
-            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 998, backdropFilter: "blur(4px)" }}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1001, backdropFilter: "blur(4px)" }}
             onClick={() => setModalUsuarioAberto(false)}
           />
-          <div
+          <div className="modal-container"
             style={{
               backgroundColor: "#fff", padding: "32px", position: "fixed", top: "50%", left: "50%",
               transform: "translate(-50%, -50%)", width: "90%", maxWidth: "450px",
-              borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 999,
+              borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 1002,
             }}
           >
             <h2 style={{ fontSize: "24px", marginBottom: "16px", fontWeight: "700", color: "#2c3e50", textAlign: "center" }}>
@@ -725,14 +728,14 @@ export default function Painel() {
       {modalAgendamentoAberto && (
         <>
           <div 
-            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 998, backdropFilter: "blur(4px)" }}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1001, backdropFilter: "blur(4px)" }}
             onClick={() => setModalAgendamentoAberto(false)}
           />
-          <div
+          <div className="modal-container"
             style={{
               backgroundColor: "#fff", padding: "32px", position: "fixed", top: "50%", left: "50%",
               transform: "translate(-50%, -50%)", width: "90%", maxWidth: "600px", maxHeight: "90vh",
-              overflowY: "auto", borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 999,
+              overflowY: "auto", borderRadius: "16px", boxShadow: "0 24px 48px rgba(0,0,0,0.2)", zIndex: 1002,
             }}
           >
             <h2 style={{ fontSize: "24px", marginBottom: "8px", fontWeight: "700", color: "#2c3e50", textAlign: "center" }}>
@@ -744,14 +747,14 @@ export default function Painel() {
                </p>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", marginTop: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <input type="date" value={agendDate} onChange={(e) => setAgendDate(e.target.value)} style={inputStyle} />
                 <input type="time" value={agendTime} onChange={(e) => setAgendTime(e.target.value)} style={inputStyle} />
               </div>
               <h4 style={{ margin: '16px 0 0 0' }}>Preencha os dados das cópias (opcional, para acelerar o processo):</h4>
               <input type="text" placeholder="Nome" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} style={inputStyle} />
               <input type="text" placeholder="Informação" value={novaInfo} onChange={(e) => setNovaInfo(e.target.value)} style={inputStyle} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="modal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <input type="text" placeholder="Nome da Empresa" value={novaEmpresa} onChange={(e) => setNovaEmpresa(e.target.value)} style={inputStyle} />
                 <input type="text" placeholder="Responsável" value={novoResponsavel} onChange={(e) => setNovoResponsavel(e.target.value)} style={inputStyle} />
               </div>
@@ -769,14 +772,14 @@ export default function Painel() {
       {detalhesItem && (
         <>
           <div 
-            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 998, backdropFilter: "blur(5px)" }}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1001, backdropFilter: "blur(5px)" }}
             onClick={() => setDetalhesItem(null)}
           />
-          <div
+          <div className="modal-container"
             style={{
               backgroundColor: "#fff", padding: "40px", position: "fixed", top: "50%", left: "50%",
               transform: "translate(-50%, -50%)", width: "90%", maxWidth: "650px", maxHeight: "90vh",
-              overflowY: "auto", borderRadius: "20px", boxShadow: "0 24px 64px rgba(0,0,0,0.3)", zIndex: 999,
+              overflowY: "auto", borderRadius: "20px", boxShadow: "0 24px 64px rgba(0,0,0,0.3)", zIndex: 1002,
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "32px", borderBottom: "1px solid #eee", paddingBottom: "16px" }}>
@@ -794,7 +797,7 @@ export default function Painel() {
               >✕</button>
             </div>
             
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <div className="details-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
               <div style={{ background: "#f8f9fa", padding: "16px", borderRadius: "12px", borderLeft: "4px solid #007AFF" }}>
                 <p style={{ fontSize: "12px", textTransform: "uppercase", color: "#7f8c8d", fontWeight: "700", marginBottom: "4px", marginTop: 0 }}>Empresa</p>
                 <p style={{ fontSize: "16px", color: "#2c3e50", margin: 0, fontWeight: "500" }}>{detalhesItem.empresa || "Não informada"}</p>

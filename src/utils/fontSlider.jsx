@@ -6,51 +6,31 @@ const FontSlider = () => {
   const [initialFontSizes, setInitialFontSizes] = useState(new Map());
 
   useEffect(() => {
-    const elements = document.querySelectorAll(
-      "h1, h2, h3, h4, h5, h6, p, span, div, label, input, textarea, button, select"
-    );
-
-    if (initialFontSizes.size === 0) {
-      const initialSizes = new Map();
-      elements.forEach((element, index) => {
-        initialSizes.set(
-          element,
-          parseFloat(window.getComputedStyle(element).fontSize)
-        );
-      });
-      setInitialFontSizes(initialSizes);
+    let scale = 1;
+    switch (selectedSize) {
+      case "pequeno": scale = 0.85; break;
+      case "normal": scale = 1; break;
+      case "grande": scale = 1.15; break;
+      case "extra-grande": scale = 1.3; break;
+      case "gigante": scale = 1.45; break;
+      default: scale = 1;
     }
+    
+    document.documentElement.style.zoom = scale;
+    
+    return () => { document.documentElement.style.zoom = 1; };
+  }, [selectedSize]);
 
-    elements.forEach((element) => {
-      const initialFontSize = initialFontSizes.get(element);
-      if (initialFontSize === undefined) return; // Should not happen if initialFontSizes is populated correctly
-
-      let newFontSize = initialFontSize;
-
-      switch (selectedSize) {
-        case "pequeno":
-          newFontSize = initialFontSize - 4; // Subtract 4px from the original size
-          break;
-        case "normal":
-          newFontSize = initialFontSize; // Reset to original size
-          break;
-        case "grande":
-          newFontSize = initialFontSize + 4; // Add 4px to the original size
-          break;
-        case "extra-grande":
-          newFontSize = initialFontSize + 8; // Add 8px to the original size
-          break;
-        case "gigante":
-          newFontSize = initialFontSize + 12; // Add 8px to the original size
-          break;
-        default:
-          newFontSize = initialFontSize;
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isExpanded && !event.target.closest('.font-slider-container')) {
+        setIsExpanded(false);
       }
-
-      // Calculate the new font size based on the selected size
-      element.style.fontSize = `${newFontSize}px`; // Apply the new font size
-    });
-  }, [selectedSize, initialFontSizes]);
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isExpanded]);
 
   const handleIncreaseFontSize = () => {
     const sizes = ["pequeno", "normal", "grande", "extra-grande", "gigante"];
@@ -69,85 +49,89 @@ const FontSlider = () => {
   };
 
   return (
-    <div style={{ position: "relative", marginBottom: "20px" }}>
+    <div className="font-slider-container" style={{ position: "relative" }}>
       <button
+        title="Ajustar tamanho da fonte"
         onClick={() => setIsExpanded(!isExpanded)}
         style={{
-          padding: "8px 15px",
-          borderRadius: "5px",
-          border: "none",
-          backgroundColor: "#007bff",
+          background: "rgba(255, 255, 255, 0.2)",
+          border: "1px solid rgba(255, 255, 255, 0.4)",
           color: "#fff",
+          borderRadius: "8px",
           cursor: "pointer",
-          fontSize: "14px",
-          fontWeight: "bold",
-          display: "block",
-          width: "100%",
-          textAlign: "center",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          fontWeight: "600",
+          transition: "all 0.3s",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '38px',
+          height: '38px',
+          boxSizing: 'border-box'
         }}
+        onMouseOver={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.4)"; }}
+        onMouseOut={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"; }}
       >
-        {isExpanded ? "Fechar Ajuste de Fonte" : "Ajustar Tamanho da Fonte"}
+        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Aa</span>
       </button>
 
       {isExpanded && (
         <div
           style={{
             position: "absolute",
-            top: "100%", // Position below the button
-            left: "0",
+            top: "calc(100% + 10px)",
             right: "0",
-            backgroundColor: "#e9ecef",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            padding: "10px 24px",
-            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-            zIndex: 1000, // Ensure it's above other content
+            backgroundColor: "#fff",
+            border: "1px solid #e0e0e0",
+            borderRadius: "12px",
+            padding: "16px 24px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+            zIndex: 1000,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            marginTop: "5px", // Small gap between button and expanded content
+            minWidth: "250px"
           }}
         >
           <label
             htmlFor="font-size-controls"
-            style={{ fontWeight: "bold", color: "#343a40", marginBottom: "10px" }}
+            style={{ fontWeight: "bold", color: "#2c3e50", marginBottom: "16px", fontSize: '16px' }}
           >
-            Tamanho da Fonte:
+            Ajustar tamanho da fonte
           </label>
           <div style={{ display: "flex", alignItems: "center" }}>
             <button
               onClick={handleDecreaseFontSize}
               style={{
-                padding: "8px 12px",
-                borderRadius: "5px",
-                border: "1px solid #007bff",
-                backgroundColor: "#007bff",
-                color: "#fff",
+                width: "40px",
+                height: "40px",
+                borderRadius: "8px",
+                border: "none",
+                backgroundColor: "#f1f3f5",
+                color: "#2c3e50",
                 cursor: "pointer",
-                fontSize: "16px",
+                fontSize: "20px",
                 fontWeight: "bold",
-                marginRight: "10px",
+                marginRight: "12px",
+                transition: "background 0.2s"
               }}
+              onMouseOver={(e) => e.target.style.background = "#e2e6ea"}
+              onMouseOut={(e) => e.target.style.background = "#f1f3f5"}
             >
               -
             </button>
             <select
               style={{
                 fontSize: "16px",
-                color: "#495057",
+                color: "#2c3e50",
                 minWidth: "120px",
                 textAlign: "center",
                 padding: "8px 12px",
-                borderRadius: "5px",
+                borderRadius: "8px",
                 border: "1px solid #ced4da",
                 backgroundColor: "#fff",
                 cursor: "pointer",
                 appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 0.75rem center",
-                backgroundSize: "16px 12px",
+                outline: 'none'
               }}
               value={selectedSize}
               onChange={(e) => setSelectedSize(e.target.value)}
@@ -161,16 +145,20 @@ const FontSlider = () => {
             <button
               onClick={handleIncreaseFontSize}
               style={{
-                padding: "8px 12px",
-                borderRadius: "5px",
-                border: "1px solid #007bff",
-                backgroundColor: "#007bff",
-                color: "#fff",
+                width: "40px",
+                height: "40px",
+                borderRadius: "8px",
+                border: "none",
+                backgroundColor: "#f1f3f5",
+                color: "#2c3e50",
                 cursor: "pointer",
-                fontSize: "16px",
+                fontSize: "20px",
                 fontWeight: "bold",
-                marginLeft: "10px",
+                marginLeft: "12px",
+                transition: "background 0.2s"
               }}
+              onMouseOver={(e) => e.target.style.background = "#e2e6ea"}
+              onMouseOut={(e) => e.target.style.background = "#f1f3f5"}
             >
               +
             </button>
